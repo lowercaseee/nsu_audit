@@ -7,6 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a365d">
     <title>NSU Audit Core</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -47,7 +48,7 @@
         .login-title span { color: #d69e2e; }
         .login-subtitle { color: #718096; margin-bottom: 30px; font-size: 14px; }
         
-        #g_id_onbutton {
+        .google-btn {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -62,11 +63,11 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        #g_id_onbutton:hover {
+        .google-btn:hover {
             background: #1a365d;
             color: white;
         }
-        #g_id_onbutton svg { width: 20px; height: 20px; }
+        .google-btn svg { width: 20px; height: 20px; }
         
         .error-msg { color: #e53e3e; margin-top: 10px; font-size: 12px; display: none; }
         
@@ -188,7 +189,36 @@
         .history-stats { display: flex; gap: 15px; margin-top: 5px; }
         .history-status { font-weight: bold; color: #48bb78; }
         
-        .g_id_signin { display: flex !important; justify-content: center !important; }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .loading-box {
+            background: white;
+            padding: 30px 50px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #1a365d;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -204,8 +234,7 @@
                 <div class="login-title"><span>NSU</span> Audit Core</div>
                 <div class="login-subtitle">Student Graduation Eligibility Checker</div>
                 
-                <div id="g_id_onbutton"
-                     onclick="handleGoogleLogin()">
+                <button class="google-btn" onclick="handleGoogleLogin()">
                     <svg viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -213,7 +242,7 @@
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
                     Sign in with Google
-                </div>
+                </button>
                 
                 <div id="errorMsg" class="error-msg">Only @northsouth.edu emails are allowed!</div>
                 
@@ -250,23 +279,10 @@
             <div class="tabs">
                 <div class="tab active" onclick="showTab('courses')">Courses</div>
                 <div class="tab" onclick="showTab('grades')">Grades</div>
-                <div class="tab" onclick="showTab('history')">History</div>
             </div>
             
             <div id="courses" class="tab-content active">
-                <div class="course-item"><div><div class="course-code">CSE115</div><div class="course-name">Introduction to Programming</div></div><div class="course-grade">A</div></div>
-                <div class="course-item"><div><div class="course-code">CSE115L</div><div class="course-name">Programming Lab</div></div><div class="course-grade">A</div></div>
-                <div class="course-item"><div><div class="course-code">CSE173</div><div class="course-name">Discrete Mathematics</div></div><div class="course-grade">A-</div></div>
-                <div class="course-item"><div><div class="course-code">CSE215</div><div class="course-name">Data Structures</div></div><div class="course-grade">B+</div></div>
-                <div class="course-item"><div><div class="course-code">CSE225</div><div class="course-name">Algorithms</div></div><div class="course-grade">A</div></div>
-                <div class="course-item"><div><div class="course-code">CSE299</div><div class="course-name">Junior Design</div></div><div class="course-grade">A</div></div>
-                <div class="course-item"><div><div class="course-code">CSE311</div><div class="course-name">Database Systems</div></div><div class="course-grade">B</div></div>
-                <div class="course-item"><div><div class="course-code">CSE323</div><div class="course-name">Software Engineering</div></div><div class="course-grade">A-</div></div>
-                <div class="course-item"><div><div class="course-code">CSE327</div><div class="course-name">Web Development</div></div><div class="course-grade">A</div></div>
-                <div class="course-item"><div><div class="course-code">CSE332</div><div class="course-name">Operating Systems</div></div><div class="course-grade">A</div></div>
-                <div class="course-item"><div><div class="course-code">CSE425</div><div class="course-name">Capstone Project I</div></div><div class="course-grade">A</div></div>
-                <div class="course-item"><div><div class="course-code">CSE435</div><div class="course-name">Machine Learning</div></div><div class="course-grade">A</div></div>
-                <div class="course-item"><div><div class="course-code">CSE450</div><div class="course-name">Artificial Intelligence</div></div><div class="course-grade">A</div></div>
+                <!-- Courses will be populated by JavaScript -->
             </div>
             
             <div id="grades" class="tab-content">
@@ -276,28 +292,89 @@
                 <div class="grade-bar"><div class="grade-letter" style="color:#68d391">A-</div><div class="grade-count">4</div><div class="grade-visual"><div class="grade-fill" style="width:8%;background:#68d391"></div></div><div class="grade-percent">8%</div></div>
             </div>
             
-            <div id="history" class="tab-content">
-                <div class="history-item"><div class="history-date">March 28, 2026</div><div class="history-stats"><span>Credits: 130</span><span>CGPA: 3.85</span></div><div class="history-status">GRADUATED</div></div>
-                <div class="history-item"><div class="history-date">March 20, 2026</div><div class="history-stats"><span>Credits: 125</span><span>CGPA: 3.82</span></div><div style="color:#ecc94b">PENDING</div></div>
-                <div class="history-item"><div class="history-date">March 15, 2026</div><div class="history-stats"><span>Credits: 120</span><span>CGPA: 3.75</span></div><div style="color:#fc8181">NOT GRADUATED</div></div>
-            </div>
-            
             <button class="btn btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+    
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-box">
+            <div class="spinner"></div>
+            <div id="loadingText">Generating PDF...</div>
         </div>
     </div>
     
     <script>
         const CLIENT_ID = '154141532177-ptg5r0u3d5v3jhv69c2378ajksg7d3bi.apps.googleusercontent.com';
         
-        // Check for token in URL (after Google redirect)
+        const courses = [
+            {code: "CSE115", name: "Introduction to Programming", credits: 3, grade: "A", semester: "Fall 2020"},
+            {code: "CSE115L", name: "Programming Lab", credits: 1, grade: "A", semester: "Fall 2020"},
+            {code: "CSE173", name: "Discrete Mathematics", credits: 3, grade: "A-", semester: "Spring 2021"},
+            {code: "CSE215", name: "Data Structures", credits: 3, grade: "B+", semester: "Fall 2021"},
+            {code: "CSE215L", name: "Data Structures Lab", credits: 1, grade: "A-", semester: "Fall 2021"},
+            {code: "CSE225", name: "Algorithms", credits: 3, grade: "A", semester: "Spring 2022"},
+            {code: "CSE299", name: "Junior Design", credits: 1, grade: "A", semester: "Spring 2022"},
+            {code: "CSE311", name: "Database Systems", credits: 3, grade: "B", semester: "Fall 2022"},
+            {code: "CSE311L", name: "Database Lab", credits: 1, grade: "B+", semester: "Fall 2022"},
+            {code: "CSE323", name: "Software Engineering", credits: 3, grade: "A-", semester: "Spring 2023"},
+            {code: "CSE327", name: "Web Development", credits: 3, grade: "A", semester: "Fall 2023"},
+            {code: "CSE331", name: "Computer Networks", credits: 3, grade: "B+", semester: "Spring 2024"},
+            {code: "CSE332", name: "Operating Systems", credits: 3, grade: "A", semester: "Fall 2024"},
+            {code: "CSE332L", name: "OS Lab", credits: 1, grade: "A-", semester: "Fall 2024"},
+            {code: "CSE399", name: "Senior Design I", credits: 1, grade: "A", semester: "Fall 2024"},
+            {code: "CSE425", name: "Capstone Project I", credits: 3, grade: "A", semester: "Spring 2025"},
+            {code: "CSE426", name: "Capstone Project II", credits: 3, grade: "A-", semester: "Spring 2025"},
+            {code: "CSE427", name: "Compiler Design", credits: 3, grade: "B+", semester: "Spring 2025"},
+            {code: "CSE435", name: "Machine Learning", credits: 3, grade: "A", semester: "Spring 2025"},
+            {code: "MAT116", name: "Calculus I", credits: 3, grade: "B+", semester: "Fall 2020"},
+            {code: "MAT125", name: "Calculus II", credits: 3, grade: "B", semester: "Spring 2021"},
+            {code: "STA201", name: "Statistics", credits: 3, grade: "A-", semester: "Fall 2021"},
+            {code: "PHY107", name: "Physics I", credits: 3, grade: "B", semester: "Fall 2020"},
+            {code: "PHY108", name: "Physics II", credits: 3, grade: "B+", semester: "Spring 2021"},
+            {code: "ENG101", name: "English Writing", credits: 3, grade: "A", semester: "Fall 2020"},
+            {code: "CSE101", name: "Computer Fundamentals", credits: 3, grade: "A", semester: "Fall 2019"},
+            {code: "CSE102", name: "Computer Fundamentals Lab", credits: 1, grade: "A", semester: "Fall 2019"},
+            {code: "CSE103", name: "Introduction to Engineering", credits: 2, grade: "A-", semester: "Fall 2019"},
+            {code: "CSE104", name: "Engineering Drawing", credits: 1, grade: "A", semester: "Fall 2019"},
+            {code: "MAT216", name: "Linear Algebra", credits: 3, grade: "A-", semester: "Spring 2022"},
+            {code: "PHY107L", name: "Physics Lab I", credits: 1, grade: "A", semester: "Fall 2020"},
+            {code: "CHY101", name: "Chemistry", credits: 3, grade: "B", semester: "Fall 2019"},
+            {code: "CHY102", name: "Chemistry Lab", credits: 1, grade: "A-", semester: "Fall 2019"},
+            {code: "BIO101", name: "Biology", credits: 3, grade: "B+", semester: "Fall 2019"},
+            {code: "ENG102", name: "Technical Writing", credits: 3, grade: "A", semester: "Spring 2021"},
+            {code: "ECO101", name: "Principles of Economics", credits: 3, grade: "B", semester: "Fall 2020"},
+            {code: "ACC101", name: "Financial Accounting", credits: 3, grade: "A-", semester: "Spring 2021"},
+            {code: "BUS101", name: "Business Communication", credits: 3, grade: "A", semester: "Fall 2021"},
+            {code: "CSE450", name: "Artificial Intelligence", credits: 3, grade: "A", semester: "Fall 2024"},
+            {code: "CSE451", name: "Cloud Computing", credits: 3, grade: "A-", semester: "Fall 2024"},
+            {code: "CSE460", name: "Cybersecurity", credits: 3, grade: "B+", semester: "Fall 2024"},
+            {code: "CSE470", name: "Data Science", credits: 3, grade: "A", semester: "Spring 2025"},
+            {code: "CSE480", name: "Mobile App Development", credits: 3, grade: "A-", semester: "Spring 2025"},
+            {code: "CSE490", name: "Software Testing", credits: 3, grade: "B+", semester: "Spring 2025"},
+            {code: "CSE400", name: "Internship", credits: 3, grade: "A", semester: "Summer 2023"},
+            {code: "CSE445", name: "Data Mining", credits: 3, grade: "A-", semester: "Fall 2023"},
+            {code: "CSE455", name: "Deep Learning", credits: 3, grade: "A", semester: "Fall 2023"},
+            {code: "CSE465", name: "Network Security", credits: 3, grade: "B+", semester: "Spring 2024"},
+            {code: "CSE475", name: "Cloud Architecture", credits: 3, grade: "A", semester: "Spring 2024"},
+        ];
+        
+        const userData = {
+            name: 'Student',
+            email: 'student@northsouth.edu',
+            totalCredits: 130,
+            cgpa: 3.85,
+            status: 'GRADUATED'
+        };
+        
         const urlParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = urlParams.get('access_token');
         
-        // Check if already logged in
-        const user = localStorage.getItem('nsu_user');
-        if (user) {
-            const userData = JSON.parse(user);
-            showDashboard(userData);
+        const savedUser = localStorage.getItem('nsu_user');
+        if (savedUser) {
+            const data = JSON.parse(savedUser);
+            userData.name = data.name || 'Student';
+            userData.email = data.email || 'student@northsouth.edu';
+            showDashboard(data);
         } else if (accessToken) {
             fetchUserInfo(accessToken);
         }
@@ -321,14 +398,16 @@
             .then(response => response.json())
             .then(data => {
                 if (data.email && data.email.endsWith('@northsouth.edu')) {
-                    const userData = {
+                    const user = {
                         name: data.name,
                         email: data.email,
                         picture: data.picture,
                         loggedIn: new Date().toISOString()
                     };
-                    localStorage.setItem('nsu_user', JSON.stringify(userData));
-                    showDashboard(userData);
+                    localStorage.setItem('nsu_user', JSON.stringify(user));
+                    userData.name = user.name;
+                    userData.email = user.email;
+                    showDashboard(user);
                 } else {
                     document.getElementById('errorMsg').style.display = 'block';
                     setTimeout(() => {
@@ -342,8 +421,7 @@
             });
         }
         
-        function showDashboard(userData) {
-            // Clear URL hash
+        function showDashboard(data) {
             if (window.location.hash) {
                 history.replaceState(null, '', window.location.pathname);
             }
@@ -351,9 +429,29 @@
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
             
-            document.getElementById('userName').textContent = userData.name;
-            document.getElementById('userEmail').textContent = userData.email;
-            document.getElementById('userAvatar').textContent = userData.name.charAt(0).toUpperCase();
+            document.getElementById('userName').textContent = data.name;
+            document.getElementById('userEmail').textContent = data.email;
+            document.getElementById('userAvatar').textContent = data.name.charAt(0).toUpperCase();
+            
+            populateCourses();
+        }
+        
+        function populateCourses() {
+            const container = document.getElementById('courses');
+            container.innerHTML = '';
+            
+            courses.forEach(course => {
+                const item = document.createElement('div');
+                item.className = 'course-item';
+                item.innerHTML = `
+                    <div>
+                        <div class="course-code">${course.code}</div>
+                        <div class="course-name">${course.name} - ${course.semester}</div>
+                    </div>
+                    <div class="course-grade">${course.grade}</div>
+                `;
+                container.appendChild(item);
+            });
         }
         
         function showTab(tabName) {
@@ -363,12 +461,209 @@
             event.target.classList.add('active');
         }
         
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+        
         function downloadCertificate() {
-            alert('Certificate PDF downloaded to your device!');
+            showLoading('Generating Certificate...');
+            
+            setTimeout(() => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    
+                    doc.setFillColor(253, 248, 240);
+                    doc.rect(0, 0, 210, 297, 'F');
+                    
+                    doc.setDrawColor(26, 54, 93);
+                    doc.setLineWidth(1);
+                    doc.rect(20, 20, 170, 257, 'S');
+                    
+                    doc.setDrawColor(214, 158, 46);
+                    doc.rect(25, 25, 160, 247, 'S');
+                    
+                    doc.setTextColor(26, 54, 93);
+                    doc.setFont('times-bold');
+                    doc.setFontSize(28);
+                    doc.text('NORTH SOUTH UNIVERSITY', 105, 50, { align: 'center' });
+                    
+                    doc.setFont('times-italic');
+                    doc.setFontSize(12);
+                    doc.setTextColor(100);
+                    doc.text('Office of the Registrar', 105, 60, { align: 'center' });
+                    
+                    doc.setDrawColor(214, 158, 46);
+                    doc.setLineWidth(0.5);
+                    doc.line(55, 68, 155, 68);
+                    
+                    doc.setFont('times-italic');
+                    doc.setFontSize(20);
+                    doc.setTextColor(50);
+                    doc.text('Certificate of Graduation', 105, 82, { align: 'center' });
+                    
+                    doc.setFont('times');
+                    doc.setFontSize(11);
+                    doc.setTextColor(80);
+                    doc.text('This is to certify that', 105, 100, { align: 'center' });
+                    
+                    doc.setFont('times-bold');
+                    doc.setFontSize(26);
+                    doc.setTextColor(26, 54, 93);
+                    
+                    let name = userData.name;
+                    let fontSize = 26;
+                    doc.setFontSize(fontSize);
+                    while (doc.getTextWidth(name) > 150 && fontSize > 14) {
+                        fontSize -= 2;
+                        doc.setFontSize(fontSize);
+                    }
+                    doc.text(name, 105, 118, { align: 'center' });
+                    
+                    doc.setDrawColor(214, 158, 46);
+                    doc.setLineWidth(0.3);
+                    doc.line(55, 124, 155, 124);
+                    
+                    doc.setFont('times');
+                    doc.setFontSize(10);
+                    doc.setTextColor(80);
+                    doc.text(`Email: ${userData.email}`, 105, 134, { align: 'center' });
+                    doc.text('has successfully completed all requirements for the degree of', 105, 142, { align: 'center' });
+                    
+                    doc.setFont('times-bold');
+                    doc.setFontSize(13);
+                    doc.setTextColor(26, 54, 93);
+                    doc.text('Bachelor of Science in Computer Science', 105, 152, { align: 'center' });
+                    
+                    doc.setFont('times-bold');
+                    doc.setFontSize(18);
+                    doc.setTextColor(34, 197, 94);
+                    doc.text(userData.status, 105, 168, { align: 'center' });
+                    
+                    doc.setFont('times');
+                    doc.setFontSize(10);
+                    doc.setTextColor(80);
+                    doc.text(`Total Credits: ${userData.totalCredits}   |   CGPA: ${userData.cgpa.toFixed(2)}`, 105, 182, { align: 'center' });
+                    
+                    const today = new Date();
+                    const dateStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    doc.text(`Date: ${dateStr}`, 105, 190, { align: 'center' });
+                    
+                    doc.setTextColor(26, 54, 93);
+                    doc.setFontSize(8);
+                    doc.text('NSU Audit Core - Graduation Eligibility System', 105, 280, { align: 'center' });
+                    
+                    doc.setFillColor(214, 158, 46);
+                    doc.rect(85, 282, 40, 1, 'F');
+                    
+                    doc.save(`NSU_Certificate_${Date.now()}.pdf`);
+                    hideLoading();
+                } catch (e) {
+                    console.error(e);
+                    hideLoading();
+                    alert('Failed to generate certificate. Please try again.');
+                }
+            }, 100);
         }
         
         function downloadTranscript() {
-            alert('Transcript PDF downloaded to your device!');
+            showLoading('Generating Transcript...');
+            
+            setTimeout(() => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    
+                    doc.setFillColor(26, 54, 93);
+                    doc.rect(0, 0, 210, 30, 'F');
+                    
+                    doc.setTextColor(214, 158, 46);
+                    doc.setFont('times-italic');
+                    doc.setFontSize(18);
+                    doc.text('North South University', 105, 15, { align: 'center' });
+                    
+                    doc.setTextColor(26, 54, 93);
+                    doc.setFont('helvetica-bold');
+                    doc.setFontSize(14);
+                    doc.text('Official Academic Transcript', 105, 42, { align: 'center' });
+                    
+                    doc.setDrawColor(214, 158, 46);
+                    doc.setLineWidth(0.5);
+                    doc.line(20, 48, 190, 48);
+                    
+                    doc.setFont('helvetica-bold');
+                    doc.setFontSize(11);
+                    doc.text(`Student: ${userData.name}`, 20, 58);
+                    doc.text(`Email: ${userData.email}`, 20, 66);
+                    doc.text(`Status: ${userData.status}`, 20, 74);
+                    doc.text(`Total Credits: ${userData.totalCredits}`, 110, 58);
+                    doc.text(`CGPA: ${userData.cgpa.toFixed(2)}`, 110, 66);
+                    
+                    doc.setFillColor(26, 54, 93);
+                    doc.rect(20, 82, 170, 8, 'F');
+                    doc.setTextColor(255);
+                    doc.setFontSize(9);
+                    doc.text('Code', 25, 87);
+                    doc.text('Course Name', 50, 87);
+                    doc.text('Credits', 125, 87);
+                    doc.text('Grade', 150, 87);
+                    doc.text('Status', 175, 87);
+                    
+                    let y = 95;
+                    doc.setTextColor(50);
+                    doc.setFont('helvetica');
+                    doc.setFontSize(8);
+                    
+                    courses.forEach((course, i) => {
+                        if (y > 270) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        
+                        if (i % 2 === 0) {
+                            doc.setFillColor(245, 247, 250);
+                            doc.rect(20, y - 4, 170, 7, 'F');
+                        }
+                        
+                        doc.setTextColor(50);
+                        doc.text(course.code, 25, y);
+                        doc.text(course.name.substring(0, 35), 50, y);
+                        doc.text(String(course.credits), 127, y);
+                        doc.text(course.grade, 152, y);
+                        doc.text('Completed', 172, y);
+                        
+                        y += 7;
+                    });
+                    
+                    doc.setDrawColor(26, 54, 93);
+                    doc.setLineWidth(0.5);
+                    doc.line(20, y + 5, 190, y + 5);
+                    
+                    doc.setFont('helvetica-bold');
+                    doc.setFontSize(10);
+                    doc.setTextColor(26, 54, 93);
+                    doc.text(`Total Credits: ${userData.totalCredits}  |  CGPA: ${userData.cgpa.toFixed(2)}  |  Status: ${userData.status}`, 105, y + 15, { align: 'center' });
+                    
+                    doc.setFont('helvetica');
+                    doc.setFontSize(8);
+                    doc.setTextColor(120);
+                    const today = new Date();
+                    const dateStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    doc.text(`Generated on ${dateStr} | NSU Audit Core`, 105, y + 23, { align: 'center' });
+                    
+                    doc.save(`NSU_Transcript_${Date.now()}.pdf`);
+                    hideLoading();
+                } catch (e) {
+                    console.error(e);
+                    hideLoading();
+                    alert('Failed to generate transcript. Please try again.');
+                }
+            }, 100);
         }
         
         function logout() {
